@@ -31,6 +31,7 @@ named!(pub entry<&str, Entry>, alt!(
     signal_definition      => { |r| Entry::SignalDefinition(r) } |
     signal_description     => { |r| Entry::SignalDescription(r) } |
     signal_attribute       => { |r| Entry::SignalAttribute(r) } |
+    signal_value           => { |r| Entry::SignalValue(r) } |
     unknown                => { |r| Entry::Unknown(r) }
 ));
 
@@ -242,6 +243,41 @@ named!(pub signal_attribute<&str, SignalAttribute>,
             id: id,
             signal_name: signal_name.to_string(),
             value: value.to_string()
+        } )
+    )
+);
+
+named! {value_field <&str, (u32, String)>, do_parse!(
+    val: map_res!(
+        digit,
+        FromStr::from_str) >>
+    space >>
+    name: quoted_str >>
+    (val, name)
+)}
+
+named!(
+    parse_values <&str, (Vec<(u32, String)>, &str)>,
+    many_till!(value_field, tag!(";"))
+);
+
+// VAL_ 1360 Pwr_FrontSensorPodAuxStatus 2 "Tripped" 1 "ON" 0 "OFF" ;
+named!(pub signal_value<&str, SignalValue>,
+    do_parse!(
+        tag!("VAL_")   >>
+        space >>
+        message_id: map_res!(
+            digit,
+            FromStr::from_str) >>
+        space >>
+        signal_name: take_while!(is_alphanumeric_extended) >>
+        space >>
+        values: parse_values >>
+        line_ending >>
+        ( SignalValue {
+            signal_name: signal_name.into(),
+            message_id,
+            values: values.0.into_iter().collect(),
         } )
     )
 );

@@ -2,6 +2,7 @@
 
 #![allow(non_upper_case_globals)]
 
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -72,6 +73,13 @@ pub struct SignalAttribute {
     pub value: String,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct SignalValue {
+    pub signal_name: String,
+    pub message_id: u32,
+    pub values: HashMap<u32, String>,
+}
+
 /// Composed DBC entry.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Entry {
@@ -99,6 +107,8 @@ pub enum Entry {
     SignalDescription(SignalDescription),
     /// `BA_ "[attribute name]" SG_ [node|can id] [signal name] [attribute value];`
     SignalAttribute(SignalAttribute),
+    /// `VAL_ [can id] [signal name] { [value id] [value string] };`
+    SignalValue(SignalValue),
 
     // `CM_ [BU_|BO_|SG_] [can id] [signal name] "[description]"`
     // Description, -- flatten subtypes instead
@@ -127,6 +137,7 @@ impl Entry {
             Entry::SignalDefinition(_) => EntryType::SignalDefinition,
             Entry::SignalDescription(_) => EntryType::SignalDescription,
             Entry::SignalAttribute(_) => EntryType::SignalAttribute,
+            Entry::SignalValue(_) => EntryType::SignalValue,
             Entry::Unknown(_) => EntryType::Unknown,
         }
     }
@@ -159,6 +170,7 @@ pub enum EntryType {
     SignalDescription,
     SignalAttribute,
 //    SignalAttributeDefinition,
+    SignalValue,
 
     // AttributeDefinition,
     // AttributeDefault,
@@ -179,6 +191,7 @@ impl Display for EntryType {
             EntryType::SignalDefinition => "SignalDefinition",
             EntryType::SignalDescription => "SignalDescription",
             EntryType::SignalAttribute => "SignalAttribute",
+            EntryType::SignalValue => "SignalValue",
 
             EntryType::Unknown => "Unknown",
         };
