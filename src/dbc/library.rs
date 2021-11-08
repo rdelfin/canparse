@@ -168,6 +168,16 @@ impl FromDbc for Message {
                     Ok(())
                 }
             }
+            Entry::SignalValue(inner) => {
+                if let Some(signal) = self.signals.get_mut(&inner.signal_name) {
+                    signal.merge_entry(Entry::SignalValue(inner))
+                } else {
+                    let name = inner.signal_name.clone();
+                    let signal = Signal::from_entry(Entry::SignalValue(inner))?;
+                    self.signals.insert(name, signal);
+                    Ok(())
+                }
+            }
             _ => Err(()),
         }
     }
@@ -239,6 +249,14 @@ impl FromDbc for Signal {
                 if let Some(_previous_value) = self.attributes.insert(name, value) {
                     // TODO: Warn that we somehow already had an existing entry
                 }
+                Ok(())
+            }
+            Entry::SignalValue(dbc::SignalValue {
+                signal_name: _,
+                message_id: _,
+                values,
+            }) => {
+                self.value_definition = Some(dbc::ValueDefinition { values });
                 Ok(())
             }
             _ => Err(()),

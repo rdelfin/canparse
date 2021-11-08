@@ -289,7 +289,7 @@ impl FromStr for Entry {
 /// Here an enum will be dispatched instead (e.g., VAL_)
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ValueDefinition {
-    values: Vec<String>,
+    values: HashMap<u32, String>,
 }
 
 pub enum AttributeType {
